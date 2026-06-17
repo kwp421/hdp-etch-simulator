@@ -52,7 +52,7 @@ input[type=range]{width:100%;accent-color:#1D9E75;cursor:pointer;height:4px;}
 .hmt-label{font-size:10px;letter-spacing:.1em;color:#888780;text-transform:uppercase;}
 .hmt-sub{font-size:10px;color:#B4B2A9;margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none;}
 .hmg{display:flex;align-items:center;gap:6px;font-size:10px;color:#888780;}
-.hgg{width:44px;height:6px;border-radius:3px;background:linear-gradient(to right,#0d180e,#1D9E75);}
+.hgg{width:44px;height:6px;border-radius:3px;background:linear-gradient(to right,#C80000,#C8B400,#14B414);}
 .acs{display:flex;gap:7px;flex-wrap:wrap;}
 .ac{font-size:11px;padding:5px 12px;border-radius:20px;}
 .tl{display:flex;flex-direction:column;gap:16px;}
@@ -241,7 +241,7 @@ function calc(p){
   const gasEff=Math.min(1.3,Math.pow(p.gasflow/60,0.35));
   const load=1+(p.gasflow/200)*0.15+(p.time/300)*0.08;
   const si=180*arrh*ionEff*pressEff*powerEff*gasEff*load;
-  const sio2=si*(0.05+0.03*(p.pressure/50)+0.02*(p.bias/500));
+  const sio2=si*(0.03+0.18*(p.pressure/50)+0.08*(p.bias/500));
   const aniso=Math.min(0.98,Math.max(0.05,1-p.pressure/70+p.bias/1000));
   return{rate:si,depth:si*(p.time/60),sel:si/sio2,
     unif:2.5+(p.pressure/50)*4+Math.max(0,(2000-p.rfpower)/2000)*3+Math.abs(p.bias-200)/200*2,
@@ -343,8 +343,8 @@ function dHeat(p){
   const w=cv.width,h=cv.height,C=32,R=16,cw=w/C,ch=h/R;
   for(let r=0;r<R;r++) for(let c=0;c<C;c++){
     const pr=1+c*(49/C),rf=200+(R-1-r)*(1800/R);
-    const n=Math.min(1,calc({...p,pressure:pr,rfpower:rf}).sel/28);
-    ctx.fillStyle=`rgb(${Math.round(13+n*16)},${Math.round(13+n*145)},${Math.round(14+n*103)})`;
+    const rawSel=calc({...p,pressure:pr,rfpower:rf}).sel; const n=Math.min(1,Math.max(0,(rawSel-2)/14));
+    const r2=n<0.5?200:Math.round(200-(n-0.5)*2*170); const g2=n<0.5?Math.round(n*2*180):180; ctx.fillStyle=`rgb(${r2},${g2},20)`;
     ctx.fillRect(c*cw,r*ch,cw+.5,ch+.5);
   }
   const cc=Math.min(C-1,Math.round((p.pressure-1)/49*C));
