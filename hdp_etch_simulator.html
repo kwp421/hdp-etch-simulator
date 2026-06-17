@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HDP Etch Simulator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f7f4;color:#1a1a18;min-height:100vh;}
+.root{max-width:900px;margin:0 auto;background:#fff;min-height:100vh;border-left:1px solid #e8e6e0;border-right:1px solid #e8e6e0;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid #e8e6e0;}
+.app-title{font-size:15px;font-weight:600;color:#1a1a18;letter-spacing:-.01em;}
+.badges{display:flex;gap:6px;}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
+.b-blue{background:#e6f1fb;color:#185FA5;}
+.b-green{background:#e1f5ee;color:#0F6E56;}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#1D9E75;margin-right:4px;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.tabs{display:flex;padding:0 28px;border-bottom:1px solid #e8e6e0;}
+.tab{font-size:13px;padding:12px 20px;cursor:pointer;border:none;background:transparent;color:#888780;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab:hover{color:#1a1a18;}
+.tab.on{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:500;}
+.panel{display:none;padding:28px;}
+.panel.on{display:block;}
+.sl{font-size:10px;letter-spacing:.12em;color:#888780;text-transform:uppercase;margin-bottom:14px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+.pr{margin-bottom:22px;}
+.pt{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.pn{font-size:13px;color:#5F5E5A;}
+.pv{font-size:13px;font-weight:600;color:#1a1a18;font-variant-numeric:tabular-nums;}
+.pu{font-size:10px;color:#B4B2A9;margin-left:2px;}
+input[type=range]{width:100%;accent-color:#1D9E75;cursor:pointer;height:4px;}
+.rb{display:flex;justify-content:space-between;margin-top:3px;}
+.rb span{font-size:10px;color:#B4B2A9;}
+.m4{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.mc{padding:14px;background:#f8f7f4;border-radius:10px;}
+.ml{font-size:10px;letter-spacing:.1em;color:#888780;text-transform:uppercase;margin-bottom:4px;}
+.mv{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;color:#1a1a18;}
+.mu{font-size:11px;color:#5F5E5A;margin-top:3px;}
+.ms{font-size:10px;margin-top:7px;padding:2px 8px;border-radius:20px;display:inline-block;}
+.ok{background:#e1f5ee;color:#0F6E56;}
+.wn{background:#faeeda;color:#854F0B;}
+.bd{background:#fcebeb;color:#A32D2D;}
+.pcol{display:flex;flex-direction:column;gap:20px;}
+.al{display:flex;flex-direction:column;gap:20px;}
+.cr{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.cc{background:#f8f7f4;border-radius:10px;padding:16px;}
+.cl{font-size:10px;letter-spacing:.1em;color:#888780;text-transform:uppercase;margin-bottom:10px;}
+.hmc{background:#f8f7f4;border-radius:10px;padding:16px;}
+.hmt{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hmt-label{font-size:10px;letter-spacing:.1em;color:#888780;text-transform:uppercase;}
+.hmt-sub{font-size:10px;color:#B4B2A9;margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none;}
+.hmg{display:flex;align-items:center;gap:6px;font-size:10px;color:#888780;}
+.hgg{width:44px;height:6px;border-radius:3px;background:linear-gradient(to right,#0d180e,#1D9E75);}
+.acs{display:flex;gap:7px;flex-wrap:wrap;}
+.ac{font-size:11px;padding:5px 12px;border-radius:20px;}
+.tl{display:flex;flex-direction:column;gap:16px;}
+.tc2{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.pp{display:flex;gap:5px;flex-wrap:wrap;}
+.ppb{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid #e8e6e0;background:transparent;color:#5F5E5A;cursor:pointer;transition:all .15s;}
+.ppb:hover,.ppb.on{background:#1D9E75;color:#fff;border-color:#1D9E75;}
+.lp{display:flex;gap:4px;}
+.lpb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e8e6e0;background:transparent;color:#5F5E5A;cursor:pointer;transition:all .15s;}
+.lpb.on{background:#f8f7f4;color:#1a1a18;border-color:#D3D1C7;font-weight:500;}
+.tg{display:grid;gap:10px;}
+.tk{padding:16px;border:1px solid #e8e6e0;border-radius:12px;background:#fff;}
+.tkl{font-size:10px;letter-spacing:.12em;color:#B4B2A9;text-transform:uppercase;margin-bottom:4px;}
+.tkw{font-size:15px;font-weight:600;color:#1a1a18;margin-bottom:5px;}
+.tkd{font-size:12px;color:#5F5E5A;line-height:1.65;}
+.tke{font-size:11px;color:#B4B2A9;margin-top:8px;padding-top:8px;border-top:1px solid #f0eeea;font-style:italic;line-height:1.55;}
+.pleg{display:flex;gap:12px;margin-top:7px;}
+.reset-btn{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e8e6e0;background:transparent;color:#888780;cursor:pointer;transition:all .15s;margin-left:auto;}
+.reset-btn:hover{border-color:#A32D2D;color:#A32D2D;}
+.pli{display:flex;align-items:center;gap:5px;font-size:11px;color:#5F5E5A;}
+.pld{width:8px;height:8px;border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="root">
+<div class="topbar">
+  <span class="app-title">HDP Etch Simulator</span>
+  <div class="badges">
+    <span class="badge b-blue">Si / Cl₂</span>
+    <span class="badge b-green"><span class="dot"></span>Live</span>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="goTab('simulate',this)">Simulate</button>
+  <button class="tab" onclick="goTab('analysis',this)">Analysis</button>
+  <button class="tab" onclick="goTab('terminology',this)">Terminology</button>
+</div>
+
+<!-- SIMULATE -->
+<div class="panel on" id="p-simulate">
+  <div class="sg">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span class="sl" style="margin-bottom:0;">Process Parameters</span>
+        <button class="reset-btn" onclick="resetParams()">↺ Reset</button>
+      </div>
+      <div class="pr"><div class="pt"><span class="pn">Chamber Pressure</span><span><span class="pv" id="v-pressure">15</span><span class="pu">mTorr</span></span></div><input type="range" min="1" max="50" value="15" step="1" oninput="upd('pressure',this.value)"><div class="rb"><span>1</span><span>50 mTorr</span></div></div>
+      <div class="pr"><div class="pt"><span class="pn">RF Source Power</span><span><span class="pv" id="v-rfpower">800</span><span class="pu">W</span></span></div><input type="range" min="200" max="2000" value="800" step="10" oninput="upd('rfpower',this.value)"><div class="rb"><span>200</span><span>2000 W</span></div></div>
+      <div class="pr"><div class="pt"><span class="pn">Bias Power</span><span><span class="pv" id="v-bias">150</span><span class="pu">W</span></span></div><input type="range" min="0" max="500" value="150" step="5" oninput="upd('bias',this.value)"><div class="rb"><span>0</span><span>500 W</span></div></div>
+      <div class="pr"><div class="pt"><span class="pn">Cl₂ Gas Flow</span><span><span class="pv" id="v-gasflow">60</span><span class="pu">sccm</span></span></div><input type="range" min="10" max="200" value="60" step="5" oninput="upd('gasflow',this.value)"><div class="rb"><span>10</span><span>200 sccm</span></div></div>
+      <div class="pr"><div class="pt"><span class="pn">Substrate Temp</span><span><span class="pv" id="v-temp">20</span><span class="pu">°C</span></span></div><input type="range" min="-20" max="80" value="20" step="1" oninput="upd('temp',this.value)"><div class="rb"><span>−20</span><span>80 °C</span></div></div>
+      <div class="pr"><div class="pt"><span class="pn">Process Time</span><span><span class="pv" id="v-time">60</span><span class="pu">s</span></span></div><input type="range" min="10" max="300" value="60" step="5" oninput="upd('time',this.value)"><div class="rb"><span>10</span><span>300 s</span></div></div>
+    </div>
+    <div class="pcol">
+      <div>
+        <div class="sl">Cross-Section Profile</div>
+        <canvas id="cvSec" style="width:100%;height:168px;display:block;border-radius:8px;" role="img" aria-label="식각 단면 프로파일"></canvas>
+        <div class="pleg">
+          <div class="pli"><div class="pld" style="background:#0F6E56"></div>SiO₂ mask</div>
+          <div class="pli"><div class="pld" style="background:#185FA5"></div>Si</div>
+          <div class="pli" id="pleg-extra"><div class="pld" style="background:#BA7517;border-radius:50%"></div>—</div>
+        </div>
+      </div>
+      <div>
+        <div class="sl">Results</div>
+        <div class="m4">
+          <div class="mc"><div class="ml">Etch Rate</div><div class="mv" id="r-rate">—</div><div class="mu">nm / min</div><div class="ms" id="s-rate"></div></div>
+          <div class="mc"><div class="ml">Etch Depth</div><div class="mv" id="r-depth">—</div><div class="mu">nm</div><div class="ms" id="s-depth"></div></div>
+          <div class="mc"><div class="ml">Selectivity</div><div class="mv" id="r-sel">—</div><div class="mu">Si : SiO₂</div><div class="ms" id="s-sel"></div></div>
+          <div class="mc"><div class="ml">Uniformity</div><div class="mv" id="r-unif">—</div><div class="mu">% (1σ)</div><div class="ms" id="s-unif"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYSIS -->
+<div class="panel" id="p-analysis">
+  <div class="al">
+    <div class="cr">
+      <div class="cc"><div class="cl">Ion Energy Distribution</div><div style="position:relative;height:160px;"><canvas id="cvIED" role="img" aria-label="이온 에너지 분포"></canvas></div></div>
+      <div class="cc"><div class="cl">Etch Rate vs Pressure</div><div style="position:relative;height:160px;"><canvas id="cvPrs" role="img" aria-label="압력 vs 식각률"></canvas></div></div>
+    </div>
+    <div class="hmc">
+      <div class="hmt">
+        <span><span class="hmt-label">Selectivity Map</span><span class="hmt-sub">Pressure × RF Power · white = current</span></span>
+        <div class="hmg"><div class="hgg"></div><span>low → high</span></div>
+      </div>
+      <canvas id="cvHeat" style="width:100%;height:116px;display:block;border-radius:6px;" role="img" aria-label="선택비 히트맵"></canvas>
+    </div>
+    <div>
+      <div class="sl" style="margin-bottom:12px;">Process Assessment</div>
+      <div class="acs" id="achips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TERMINOLOGY -->
+<div class="panel" id="p-terminology">
+  <div class="tl">
+    <div class="tc2">
+      <div class="pp">
+        <button class="ppb on" onclick="sTerm('pressure',this)">Pressure</button>
+        <button class="ppb" onclick="sTerm('rfpower',this)">RF Power</button>
+        <button class="ppb" onclick="sTerm('bias',this)">Bias</button>
+        <button class="ppb" onclick="sTerm('gasflow',this)">Gas Flow</button>
+        <button class="ppb" onclick="sTerm('temp',this)">Temperature</button>
+        <button class="ppb" onclick="sTerm('time',this)">Time</button>
+      </div>
+      <div class="lp">
+        <button class="lpb on" onclick="sLang('all',this)">All</button>
+        <button class="lpb" onclick="sLang('ko',this)">한국어</button>
+        <button class="lpb" onclick="sLang('en',this)">English</button>
+        <button class="lpb" onclick="sLang('de',this)">Deutsch</button>
+      </div>
+    </div>
+    <div id="tcards" class="tg"></div>
+  </div>
+</div>
+</div>
+
+<script>
+const TD={
+  pressure:{
+    ko:{word:'챔버 압력',desc:'식각 챔버 내부의 기체 압력. 낮을수록 이온의 평균자유경로가 길어져 이방성이 높아진다. 일반 범위: 1–50 mTorr.',ex:'예문: "Reduce chamber pressure to 5 mTorr for high-aspect-ratio etch."'},
+    en:{word:'Chamber Pressure',desc:'Gas pressure inside the etch chamber. Lower pressure increases mean free path of ions, enhancing directional anisotropy. Typical range: 1–50 mTorr.',ex:'Example: "Reduce chamber pressure to 5 mTorr for high-aspect-ratio etch."'},
+    de:{word:'Kammerdruck',desc:'Gasdruck im Ätzreaktor. Geringerer Druck erhöht die mittlere freie Weglänge der Ionen und verbessert die Anisotropie.',ex:'Beispiel: "Kammerdruck auf 5 mTorr reduzieren für hochaspektiges Ätzen."'}
+  },
+  rfpower:{
+    ko:{word:'RF 소스 파워',desc:'플라즈마 생성에 쓰이는 고주파 전력. 높을수록 이온 밀도가 높아지고 식각률이 증가한다.',ex:'예문: "Increase RF power to 1200 W to achieve target etch rate of 300 nm/min."'},
+    en:{word:'RF Source Power',desc:'Radio-frequency power for plasma generation. Higher power increases ion density and etch rate.',ex:'Example: "Increase RF power to 1200 W to achieve target etch rate of 300 nm/min."'},
+    de:{word:'HF-Quellleistung',desc:'Hochfrequenzleistung zur Plasmaerzeugung. Höhere Leistung steigert die Ionendichte und die Ätzrate.',ex:'Beispiel: "HF-Leistung auf 1200 W erhöhen für Ätzrate von 300 nm/min."'}
+  },
+  bias:{
+    ko:{word:'바이어스 파워',desc:'기판에 인가되는 RF 바이어스. 이온 가속 에너지를 제어한다. 높을수록 물리적 스퍼터링 기여 증가, 선택비 감소.',ex:'예문: "Bias power set to 200 W to maintain sidewall passivation."'},
+    en:{word:'Bias Power',desc:'RF bias applied to substrate. Controls ion bombardment energy — higher bias increases sputtering and reduces selectivity.',ex:'Example: "Bias power set to 200 W to maintain sidewall passivation."'},
+    de:{word:'Bias-Leistung',desc:'HF-Vorspannung am Substrat. Höhere Bias erhöht den Sputteranteil und reduziert die Selektivität.',ex:'Beispiel: "Bias-Leistung auf 200 W für Seitenwandpassivierung."'}
+  },
+  gasflow:{
+    ko:{word:'Cl₂ 가스 유량',desc:'식각 가스(염소)의 공급 유량. Si와 반응해 휘발성 SiClₓ를 형성한다. 과다 시 측면 식각 증가.',ex:'예문: "Cl₂ flow at 80 sccm with 20 sccm HBr for improved selectivity."'},
+    en:{word:'Cl₂ Gas Flow',desc:'Flow rate of chlorine etch gas. Reacts with Si to form volatile SiClₓ. Excess flow increases isotropic etching.',ex:'Example: "Cl₂ flow at 80 sccm with 20 sccm HBr for improved selectivity."'},
+    de:{word:'Cl₂-Gasfluss',desc:'Cl₂ reagiert mit Si unter Bildung flüchtiger SiClₓ. Zu hoher Fluss fördert isotropes Ätzen.',ex:'Beispiel: "Cl₂-Fluss bei 80 sccm mit 20 sccm HBr für bessere Selektivität."'}
+  },
+  temp:{
+    ko:{word:'기판 온도',desc:'Arrhenius 관계에 따라 화학적 식각률에 영향. 온도 상승 시 반응 속도 증가, 선택비에도 영향.',ex:'예문: "Wafer temperature controlled at 20°C via backside He cooling."'},
+    en:{word:'Substrate Temperature',desc:'Affects chemical etch rate via Arrhenius relationship. Higher temperature accelerates reaction kinetics.',ex:'Example: "Wafer temperature controlled at 20°C via backside He cooling."'},
+    de:{word:'Substrattemperatur',desc:'Beeinflusst die chemische Ätzrate nach Arrhenius. Höhere Temperaturen beschleunigen die Reaktionskinetik.',ex:'Beispiel: "Wafertemperatur bei 20°C über He-Rückseitenkühlung geregelt."'}
+  },
+  time:{
+    ko:{word:'공정 시간',desc:'총 식각 진행 시간. 식각 깊이 = 식각률 × 시간. 과도하면 과식각 및 로딩 효과 심화.',ex:'예문: "Etch time set to 90 s with 20% over-etch to ensure complete via clearing."'},
+    en:{word:'Process Time',desc:'Total etch duration. Depth = rate × time. Excessive time causes over-etch and amplifies the loading effect.',ex:'Example: "Etch time 90 s with 20% over-etch for complete via clearing."'},
+    de:{word:'Prozesszeit',desc:'Ätztiefe = Rate × Zeit. Übermäßige Zeit verursacht Überätzen und verstärkt den Beladungseffekt.',ex:'Beispiel: "Ätzzeit 90 s mit 20% Überätzung für vollständiges Via-Öffnen."'}
+  }
+};
+
+let cTerm='pressure',cLang='all',ied=null,prs=null;
+
+function goTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('p-'+id).classList.add('on');
+  if(id==='analysis') setTimeout(()=>{const p=gP();const r=calc(p);rIED(p);rPrs(p);dHeat(p);dChips(r,p);},40);
+}
+
+const DEFAULTS={pressure:15,rfpower:800,bias:150,gasflow:60,temp:20,time:60};
+
+function resetParams(){
+  const s=document.querySelectorAll('input[type=range]');
+  const keys=['pressure','rfpower','bias','gasflow','temp','time'];
+  keys.forEach((k,i)=>{s[i].value=DEFAULTS[k];document.getElementById('v-'+k).textContent=DEFAULTS[k];});
+  upd('pressure',DEFAULTS.pressure);
+}
+
+function gP(){
+  const s=document.querySelectorAll('input[type=range]');
+  return{pressure:+s[0].value,rfpower:+s[1].value,bias:+s[2].value,gasflow:+s[3].value,temp:+s[4].value,time:+s[5].value};
+}
+
+function calc(p){
+  const T=p.temp+273.15;
+  const arrh=Math.exp(-0.18/(8.314e-3*T));
+  const ionEff=Math.pow((20+p.bias*0.8)/150,0.6);
+  const pressEff=Math.pow(15/p.pressure,0.4);
+  const powerEff=Math.pow(p.rfpower/800,0.7);
+  const gasEff=Math.min(1.3,Math.pow(p.gasflow/60,0.35));
+  const load=1+(p.gasflow/200)*0.15+(p.time/300)*0.08;
+  const si=180*arrh*ionEff*pressEff*powerEff*gasEff*load;
+  const sio2=si*(0.05+0.03*(p.pressure/50)+0.02*(p.bias/500));
+  const aniso=Math.min(0.98,Math.max(0.05,1-p.pressure/70+p.bias/1000));
+  return{rate:si,depth:si*(p.time/60),sel:si/sio2,
+    unif:2.5+(p.pressure/50)*4+Math.max(0,(2000-p.rfpower)/2000)*3+Math.abs(p.bias-200)/200*2,
+    aniso,lat:(1-aniso)*0.45};
+}
+
+function stCls(v,ok1,ok2,w1,w2){
+  if(v<(w1??ok1)||v>(w2??ok2)) return'bd';
+  if(v<ok1||v>ok2) return'wn';
+  return'ok';
+}
+function stTxt(v,ok1,ok2,w1,w2){
+  if(v<(w1??ok1)||v>(w2??ok2)) return'⚠ Out of spec';
+  if(v<ok1||v>ok2) return'△ Marginal';
+  return'✓ In spec';
+}
+
+function upd(k,v){
+  document.getElementById('v-'+k).textContent=v;
+  const p=gP(),r=calc(p);
+  document.getElementById('r-rate').textContent=r.rate.toFixed(0);
+  document.getElementById('r-depth').textContent=r.depth.toFixed(0);
+  document.getElementById('r-sel').textContent=r.sel.toFixed(1);
+  document.getElementById('r-unif').textContent=r.unif.toFixed(1);
+  [[r.rate,80,350,30,450,'rate'],[r.sel,8,100,4,100,'sel'],[r.unif,0,5,0,8,'unif']].forEach(([val,ok1,ok2,w1,w2,id])=>{
+    const el=document.getElementById('s-'+id);
+    el.textContent=stTxt(val,ok1,ok2,w1,w2);
+    el.className='ms '+stCls(val,ok1,ok2,w1,w2);
+  });
+  document.getElementById('s-depth').textContent='';
+  dSec(p,r);
+  if(document.getElementById('p-analysis').classList.contains('on')){rIED(p);rPrs(p);dHeat(p);dChips(r,p);}
+}
+
+function dSec(p,r){
+  const cv=document.getElementById('cvSec');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||300; cv.height=168;
+  const w=cv.width,h=cv.height;
+  ctx.fillStyle='#f0eeea'; ctx.fillRect(0,0,w,h);
+  const cx=w/2,mW=Math.min(68,w*.33),oW=Math.min(38,w*.18);
+  const mD=Math.min(90,r.depth/2.1);
+  const bow=Math.max(0,(1-r.aniso)*0.5);
+  const tW=oW+r.lat*mD*2,midW=tW*(1+bow*.4),bW=tW*(1-Math.max(0,r.aniso-.5)*.22);
+  ctx.fillStyle='#185FA5'; ctx.fillRect(0,38,w,h-38);
+  ctx.fillStyle='#0F6E56';
+  ctx.fillRect(cx-mW-oW/2,20,mW,20);
+  ctx.fillRect(cx+oW/2,20,mW,20);
+  if(mD>2){
+    ctx.beginPath();
+    ctx.moveTo(cx-tW/2,38);
+    ctx.bezierCurveTo(cx-midW/2,38+mD*.38,cx-bW/2,38+mD*.72,cx-bW/2+bW*.08,38+mD);
+    r.aniso>0.55?ctx.lineTo(cx+bW/2-bW*.08,38+mD):ctx.quadraticCurveTo(cx,38+mD+8,cx+bW/2-bW*.08,38+mD);
+    ctx.bezierCurveTo(cx+bW/2,38+mD*.72,cx+midW/2,38+mD*.38,cx+tW/2,38);
+    ctx.closePath(); ctx.fillStyle='#f0eeea'; ctx.fill();
+    if(p.bias>280){
+      const n=(p.bias-280)/440*5;
+      ctx.fillStyle='#f0eeea';
+      ctx.fillRect(cx-tW/2-n,38,n+1,4);
+      ctx.fillRect(cx+tW/2-1,38,n+1,4);
+    }
+    if(mD>22){
+      ctx.strokeStyle='rgba(133,79,11,.5)'; ctx.lineWidth=1; ctx.setLineDash([2,2]);
+      ctx.beginPath(); ctx.moveTo(cx+tW/2+16,38); ctx.lineTo(cx+tW/2+16,38+mD); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(133,79,11,.8)'; ctx.font='10px -apple-system,sans-serif';
+      ctx.fillText(r.depth.toFixed(0)+'nm',cx+tW/2+19,38+mD/2+4);
+    }
+  }
+  ctx.fillStyle='rgba(0,0,0,.3)'; ctx.font='9px -apple-system,sans-serif';
+  ctx.fillText('SiO₂',cx-mW-oW/2+3,36);
+  ctx.fillText('Si',5,56);
+  const lbl=r.aniso>.65?'anisotropic (vertical)':r.aniso>.38?'bowing present':'isotropic (undercut)';
+  document.getElementById('pleg-extra').innerHTML=`<div class="pld" style="background:#BA7517;border-radius:50%"></div><span>${lbl}</span>`;
+}
+
+function rIED(p){
+  if(!ied)return;
+  const pk=20+p.bias*.8,sg=15+p.pressure*.3,l=[],d=[];
+  for(let e=0;e<=600;e+=10){l.push(e);d.push(+Math.exp(-.5*Math.pow((e-pk)/sg,2)).toFixed(3));}
+  ied.data.labels=l; ied.data.datasets[0].data=d; ied.update('none');
+}
+
+function rPrs(p){
+  if(!prs)return;
+  const l=[],line=[],dot=[];
+  for(let pr=1;pr<=50;pr+=2){
+    const r=calc({...p,pressure:pr});
+    l.push(pr); line.push(+r.rate.toFixed(0));
+    dot.push(Math.abs(pr-p.pressure)<=1?+r.rate.toFixed(0):null);
+  }
+  prs.data.labels=l; prs.data.datasets[0].data=line; prs.data.datasets[1].data=dot; prs.update('none');
+}
+
+function dHeat(p){
+  const cv=document.getElementById('cvHeat');
+  const ctx=cv.getContext('2d');
+  cv.width=cv.offsetWidth||580; cv.height=116;
+  const w=cv.width,h=cv.height,C=32,R=16,cw=w/C,ch=h/R;
+  for(let r=0;r<R;r++) for(let c=0;c<C;c++){
+    const pr=1+c*(49/C),rf=200+(R-1-r)*(1800/R);
+    const n=Math.min(1,calc({...p,pressure:pr,rfpower:rf}).sel/28);
+    ctx.fillStyle=`rgb(${Math.round(13+n*16)},${Math.round(13+n*145)},${Math.round(14+n*103)})`;
+    ctx.fillRect(c*cw,r*ch,cw+.5,ch+.5);
+  }
+  const cc=Math.min(C-1,Math.round((p.pressure-1)/49*C));
+  const rc=Math.max(0,Math.min(R-1,R-1-Math.round((p.rfpower-200)/1800*R)));
+  ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1.5;
+  ctx.strokeRect(cc*cw,rc*ch,cw,ch);
+  ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='9px -apple-system,sans-serif';
+  ctx.fillText('Pressure (mTorr) →',4,h-4);
+  ctx.fillText('RF Power ↑',w-60,11);
+}
+
+function dChips(r,p){
+  const ch=[];
+  r.rate<50?ch.push(['식각률 너무 낮음 — RF Power 상향 권장','bd']):r.rate>350?ch.push(['식각률 과다 — 마스크 손상 위험','wn']):ch.push(['식각률 적정 범위','ok']);
+  r.sel<5?ch.push(['선택비 위험 — Bias 감소 필요','bd']):r.sel<8?ch.push(['선택비 낮음','wn']):ch.push(['선택비 양호','ok']);
+  r.unif>8?ch.push(['균일도 불량 (>8%)','bd']):r.unif>5?ch.push(['균일도 주의 (5–8%)','wn']):ch.push(['균일도 우수 (<5%)','ok']);
+  r.aniso>.65?ch.push(['이방성 프로파일 — 수직 식각','ok']):r.aniso>.35?ch.push(['부분 등방성 — bowing 발생','wn']):ch.push(['등방성 — 언더컷 위험','bd']);
+  if(p.bias>350&&r.sel<8) ch.push(['Bias ↑ × 선택비 ↓ 상충 — 조합 재검토','wn']);
+  document.getElementById('achips').innerHTML=ch.map(([t,c])=>`<span class="ac ${c}">${t}</span>`).join('');
+}
+
+function sTerm(k,el){cTerm=k;document.querySelectorAll('.ppb').forEach(b=>b.classList.remove('on'));el.classList.add('on');rTerm();}
+function sLang(l,el){cLang=l;document.querySelectorAll('.lpb').forEach(b=>b.classList.remove('on'));el.classList.add('on');rTerm();}
+function rTerm(){
+  const t=TD[cTerm],lm={ko:'한국어',en:'English',de:'Deutsch'};
+  const ls=cLang==='all'?['ko','en','de']:[cLang];
+  const el=document.getElementById('tcards');
+  el.style.gridTemplateColumns=ls.length===3?'repeat(3,1fr)':ls.length===2?'1fr 1fr':'1fr';
+  el.innerHTML=ls.map(l=>`<div class="tk"><div class="tkl">${lm[l]}</div><div class="tkw">${t[l].word}</div><div class="tkd">${t[l].desc}</div><div class="tke">${t[l].ex}</div></div>`).join('');
+}
+
+window.addEventListener('load',()=>{
+  const gc='rgba(0,0,0,.05)',tc='rgba(0,0,0,.3)';
+  const base={responsive:true,maintainAspectRatio:false,animation:{duration:100},plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:9},maxTicksLimit:6}},y:{grid:{color:gc},ticks:{color:tc,font:{size:9},maxTicksLimit:4}}}};
+  ied=new Chart(document.getElementById('cvIED'),{type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#1D9E75',borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:'rgba(29,158,117,.08)'}]},
+    options:{...base,scales:{...base.scales,x:{...base.scales.x,title:{display:true,text:'Ion Energy (eV)',color:tc,font:{size:9}}}}}});
+  prs=new Chart(document.getElementById('cvPrs'),{type:'line',data:{labels:[],datasets:[
+    {data:[],borderColor:'#378ADD',borderWidth:1.5,pointRadius:0,fill:false},
+    {data:[],borderColor:'#BA7517',pointRadius:5,pointBackgroundColor:'#BA7517',showLine:false}]},
+    options:{...base,scales:{...base.scales,
+      x:{...base.scales.x,title:{display:true,text:'Pressure (mTorr)',color:tc,font:{size:9}}},
+      y:{...base.scales.y,title:{display:true,text:'Rate (nm/min)',color:tc,font:{size:9}}}}}});
+  rTerm(); upd('pressure',15);
+});
+</script>
+</body>
+</html>
